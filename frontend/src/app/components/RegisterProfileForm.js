@@ -1,210 +1,136 @@
 'use client';
-
-import { useState } from "react";
-import { useAccount, useConnect } from "wagmi";
-import Select from "react-select";
-import {CONTRACTS} from '@/context/constants';
-import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
 import { ethers } from "ethers";
-import {useRouter} from "next/navigation";
-
-const skillOptions = [
-  { value: "solidity", label: "Solidity" },
-  { value: "design", label: "UI/UX Design" },
-  { value: "writing", label: "Technical Writing" },
-  { value: "frontend", label: "Frontend Dev" },
-  { value: "marketing", label: "Marketing" },
-  // Add more
-];
+import { CONTRACTS } from '@/context/constants';
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function RegistrationForm() {
   const { address } = useAccount();
-
-      
-
-
-
-  const [role, setRole] = useState("freelancer");
-  const [formData, setFormData] = useState({
+  const router = useRouter();
+  const [profile, setProfile] = useState({
     name: "",
-    bio: "",
-    location: "",
-    hours: "",
-    expertise: "",
-    socials: "",
+    role: 0, // 0 = Freelancer, 1 = Recruiter
+    hourlyRate: ""
   });
-  const [skills, setSkills] = useState([]);
-  const [imageFile, setImageFile] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const handleInputChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
-  };
-
-  const uploadToIPFS = async (file, type = "image") => {
-    const res = await fetch("/api/url");
-    const { url } = await res.json();
-
-    await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type || "application/json",
-      },
-      body: file,
-    });
-
-    const cid = new URL(url).pathname.split("/").pop();
-    return `https://gateway.pinata.cloud/ipfs/${cid}`;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
+    if (!profile.name) return toast.error("Name required");
+  
     try {
+      setLoading(true);
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACTS.PROFILE_MANAGER.address, CONTRACTS.PROFILE_MANAGER.abi, signer);
-
-      if (!address || !contract) throw new Error("Wallet or contract not ready");
-
-      // Step 1: Upload image
-      const imageUrl = await uploadToIPFS(imageFile, "image");
-
-      // Step 2: Build metadata
-      const metadata = {
-        ...formData,
-        role,
-        skills: skills.map((s) => s.value),
-        image: imageUrl,
-        wallet: address,
-        timestamp: new Date().toISOString(),
-      };
-
-      const metadataBlob = new Blob([JSON.stringify(metadata)], {
-        type: "application/json",
-      });
-
-      // Step 3: Upload metadata
-      const metadataURI = await uploadToIPFS(metadataBlob, "json");
-
-      // Step 4: Smart contract call
-      const tx = await contract.registerProfile(formData.name, role, metadataURI);
+      const contract = new ethers.Contract(
+        CONTRACTS.PROFILE_MANAGER.address,
+        CONTRACTS.PROFILE_MANAGER.abi,
+        signer
+      );
+  
+      // Check existing profile using string comparison
+      const existingProfile = await contract.getProfile(address);
+      if (existingProfile.exists) {
+        router.push(existingProfile.role === "freelancer" 
+          ? "/dashboard/freelancer" 
+          : "/dashboard/recruiter");
+        return;
+      }
+  
+      // Convert UI role to contract's enum index
+      const contractRole = profile.role === 0 
+        ? 0 // Freelancer
+        : 1; // Recruiter
+  
+      const tx = await contract.createProfile(
+        profile.name,
+        contractRole,
+        profile.hourlyRate || 0
+      );
+      
       await tx.wait();
-
-      toast.success("Profile registered successfully!");
+      
+      // Verify the actual stored role using string comparison
+      const newProfile = await contract.getProfile(address);
+      router.push(newProfile.role === "freelancer" 
+        ? "/dashboard/freelancer" 
+        : "/dashboard/recruiter");
+  
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Something went wrong");
+      if (err.message.includes("Profile already exists")) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const contract = new ethers.Contract(
+          CONTRACTS.PROFILE_MANAGER.address,
+          CONTRACTS.PROFILE_MANAGER.abi,
+          provider
+        );
+        const existing = await contract.getProfile(address);
+        router.push(existing.role === "freelancer" 
+          ? "/dashboard/freelancer" 
+          : "/dashboard/recruiter");
+        return;
+      }
+      toast.error(err.reason || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow space-y-4"
-    >
-      <h2 className="text-xl font-bold">Create Your Profile</h2>
+    <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-6">Create Profile</h1>
 
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            value="freelancer"
-            checked={role === "freelancer"}
-            onChange={() => setRole("freelancer")}
-          />
-          Freelancer
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            value="recruiter"
-            checked={role === "recruiter"}
-            onChange={() => setRole("recruiter")}
-          />
-          Recruiter
-        </label>
-      </div>
-
-      <input
-        name="name"
-        placeholder="Name"
-        onChange={handleInputChange}
-        className="w-full p-2 border rounded"
-        required
-      />
-
-      {role === "freelancer" && (
-        <>
-          <Select
-            isMulti
-            options={skillOptions}
-            value={skills}
-            onChange={setSkills}
-            className="w-full"
-            placeholder="Select skills"
-          />
-          <input
-            name="location"
-            placeholder="Location"
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-          />
-          <input
-            name="hours"
-            placeholder="Hours Available"
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-          />
-          <input
-            name="expertise"
-            placeholder="Area of Expertise"
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-          />
-        </>
-      )}
-
-      <textarea
-        name="bio"
-        placeholder="Bio"
-        onChange={handleInputChange}
-        className="w-full p-2 border rounded"
-      />
-      <input
-        name="socials"
-        placeholder="Socials (Twitter, GitHub, etc)"
-        onChange={handleInputChange}
-        className="w-full p-2 border rounded"
-      />
-
-      <div className="flex items-center gap-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
           required
+          placeholder="Your Name"
+          value={profile.name}
+          onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+          className="w-full p-2 border rounded"
         />
-        {preview && <img src={preview} alt="Preview" className="h-16 rounded" />}
-      </div>
 
-      <button
-        type="submit"
-        className="bg-black text-white px-4 py-2 rounded"
-        disabled={loading}
-      >
-        {loading ? "Uploading..." : "Submit"}
-      </button>
-    </form>
+        <div className="flex gap-4 mb-4">
+          <button
+            type="button"
+            onClick={() => setProfile({ ...profile, role: 0 })}
+            className={`flex-1 p-2 rounded ${
+              profile.role === 0 ? 'bg-blue-600 text-white' : 'bg-gray-100'
+            }`}
+          >
+            Freelancer
+          </button>
+          <button
+            type="button"
+            onClick={() => setProfile({ ...profile, role: 1 })}
+            className={`flex-1 p-2 rounded ${
+              profile.role === 1 ? 'bg-blue-600 text-white' : 'bg-gray-100'
+            }`}
+          >
+            Recruiter
+          </button>
+        </div>
+
+        {profile.role === 0 && (
+          <input
+            type="number"
+            placeholder="Hourly Rate (optional)"
+            value={profile.hourlyRate}
+            onChange={(e) => setProfile({ ...profile, hourlyRate: e.target.value })}
+            className="w-full p-2 border rounded"
+          />
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+        >
+          {loading ? "Creating..." : "Create Profile"}
+        </button>
+      </form>
+    </div>
   );
 }

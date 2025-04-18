@@ -1,53 +1,50 @@
 "use client";
-
-import { useAccount, usePublicClient } from "wagmi";
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { getProfile } from "@/utils/contracts/profile";
-import { getProvider } from "@/utils/ethers";
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAccount } from 'wagmi';
+import { useProfile } from '@/hooks/useProfile';
 
 export default function AuthGuard({ children }) {
-  const { address, isConnected } = useAccount();
   const router = useRouter();
   const pathname = usePathname();
-  const [checking, setChecking] = useState(true);
+  const { isConnected } = useAccount();
+  const { profile, loading } = useProfile();
 
   useEffect(() => {
-    if (!isConnected) return setChecking(false);
-    if (pathname === "/register") return setChecking(false);
+    const validPaths = ['/', '/register', '/dashboard/freelancer', '/dashboard/recruiter'];
+    
+    // Immediate exit for invalid paths
+    if (!validPaths.includes(pathname)) {
+      router.replace('/');
+      return;
+    }
 
-    ;(async () => {
-      try {
-        const provider = getProvider();
-        const profile = await getProfile(provider, address);
+    // No wallet connected - only allow landing page
+    if (!isConnected && pathname !== '/') {
+      router.replace('/');
+      return;
+    }
 
-        if (!profile.exists) {
-          return router.replace("/register");
-        }
+    // Wallet connected - handle profile states
+    if (isConnected && !loading) {
+      const targetPath = profile?.exists 
+        ? `/dashboard/${profile.role.toLowerCase()}`
+        : '/register';
 
-        const role = profile.role.toLowerCase();
-        if (role === "freelancer" && !pathname.startsWith("/dashboard/freelancer")) {
-          return router.replace("/dashboard/freelancer");
-        }
-
-        if (role === "recruiter" && pathname.startsWith("/dashboard/recruiter")) {
-          return router.replace("/dashboard/recruiter");
-        }
-      } catch (err) {
-        console.error("AuthGuard error:", err);
-      } finally{
-        setChecking(false);
+      if (pathname !== targetPath) {
+        router.replace(targetPath);
       }
-    })();
-  }, [address, pathname, isConnected]);
-  
-  if(checking){
+    }
+  }, [isConnected, loading, profile?.exists, pathname]);
+
+  // Show loading state during initial checks
+  if ((isConnected && loading) || (!isConnected && pathname !== '/')) {
     return (
-        <div className="flex items-center justify-center h-screen">
-            Checking authetication...
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-pulse text-gray-500">Verifying session...</div>
+      </div>
     );
   }
-  
+
   return children;
 }

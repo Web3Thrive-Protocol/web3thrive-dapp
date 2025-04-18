@@ -1,6 +1,6 @@
 {
-  "MasterModule#Escrow": "0xC32D7d91D9577b95356b160495C218D43F6e3859",
-  "MasterModule#LearningModule": "0x18E579B1Cd6D6622CfA3709477567af13049440e",
-  "MasterModule#ProfileManager": "0x3EE46cAF305e01D027630eAC04b6F92Ed612331d",
-  "MasterModule#Reputation": "0x930d9e87cC0e4705dD75961Cbbb666E9833EfC7f"
+  "MasterModule#Escrow": "0x25aaE7508439AFb5c44EaA6eBC3887228A041e19",
+  "MasterModule#LearningModule": "0xA77f94fe8609B3d6Fc0e6D0B1E77796867832aCF",
+  "MasterModule#ProfileManager": "0xD51B4F0B45B3F0C60fA4C4e9FFb79C3DCcF9F541",
+  "MasterModule#Reputation": "0x9B56E4fF8c61F68711273aF1042f3476E608447B"
 }

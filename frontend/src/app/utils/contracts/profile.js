@@ -1,55 +1,71 @@
-import {getPublicClient, getWalletClient} from "@wagmi/core";
-import {CONTRACTS} from "@/context/constants";
-import {ethers} from "ethers";
+import { getWalletClient } from "@wagmi/core";
+import { CONTRACTS } from "@/context/constants";
+import { ethers } from "ethers";
 
-
-export async function registerProfile(name, role, metadataURI) {
+export async function registerProfile(name, roleType, hourlyRate) {
+  try {
     const walletClient = await getWalletClient();
-    const signer = new ethers.BrowserProvider(walletClient).getSigner();
-    const contract = new ethers.Contract(CONTRACTS.PROFILE_MANAGER.address, CONTRACTS.PROFILE_MANAGER.abi, signer);
-
-    const tx = await contract.registerProfile(name, role, metadataURI);
-    return await tx.wait();
-}
-
-export async function updateProfile(metadataURI){
-    const walletClient = await getWalletClient();
-    const signer = new ethers.BrowserProvider(walletClient).getSigner();
-    const contract = new ethers.Contract(CONTRACTS.PROFILE_MANAGER.address, CONTRACTS.PROFILE_MANAGER.abi, signer);
-
-    const tx = await contract.updateProfile(metadataURI);
-    return await tx.wait();
-}
-
-
-// Returns an ethers.Contract instance bound to either a provider or signer
-export async function getProfileContract(providerOrSigner) {
-    return new ethers.Contract(
+    const provider = new ethers.BrowserProvider(walletClient);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(
       CONTRACTS.PROFILE_MANAGER.address,
       CONTRACTS.PROFILE_MANAGER.abi,
-      providerOrSigner
+      signer
     );
+
+    const tx = await contract.createProfile(name, roleType, hourlyRate);
+    return await tx.wait();
+  } catch (error) {
+    console.error("Registration failed:", error);
+    throw error;
   }
-  
-  // Get a profile by address
-  export async function getProfile(provider, userAddress) {
+}
+
+export async function updateProfile(name, roleType, hourlyRate) {
+  try {
+    const walletClient = await getWalletClient();
+    const provider = new ethers.BrowserProvider(walletClient);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(
+      CONTRACTS.PROFILE_MANAGER.address,
+      CONTRACTS.PROFILE_MANAGER.abi,
+      signer
+    );
+
+    const tx = await contract.updateProfile(name, roleType, hourlyRate);
+    return await tx.wait();
+  } catch (error) {
+    console.error("Update failed:", error);
+    throw error;
+  }
+}
+
+export async function getProfileContract(providerOrSigner) {
+  return new ethers.Contract(
+    CONTRACTS.PROFILE_MANAGER.address,
+    CONTRACTS.PROFILE_MANAGER.abi,
+    providerOrSigner
+  );
+}
+
+export async function getProfile(provider, userAddress) {
+  try {
     const contract = await getProfileContract(provider);
-  
-    try {
-      const profile = await contract.profiles(userAddress);
-  
-      return {
-        name: profile.name,
-        role: profile.role,
-        metadataURI: profile.metadataURI,
-        exists: profile.exists,
-      };
-    } catch (err) {
-      console.error("Contract read failed. Debug info:");
-      console.error("Address:", CONTRACTS.PROFILE_MANAGER.address);
-      console.error("ABI has 'profiles'?:", CONTRACTS.PROFILE_MANAGER.abi.some(item => item.name === "profiles"));
-      console.error("User address:", userAddress);
-      throw err;
-    }
+    const profile = await contract.getProfile(userAddress);
+    const roleString = await contract.roleTypeToString(profile.roleType);
+
+    return {
+      name: profile.name,
+      roleType: roleString,
+      hourlyRate: profile.hourlyRate.toString(),
+      exists: profile.exists,
+    };
+  } catch (error) {
+    console.error("Profile fetch failed:", {
+      address: CONTRACTS.PROFILE_MANAGER.address,
+      userAddress,
+      error
+    });
+    throw error;
   }
-  
+}

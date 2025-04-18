@@ -7,6 +7,7 @@ import MessagesSection from "@/dashboard/freelancer/sections/MessagesSection";
 import LearningSection from "@/dashboard/freelancer/sections/LearningSection";
 import WalletSection from "@/dashboard/freelancer/sections/WalletSection";
 import ReputationSection from "@/dashboard/freelancer/sections/ReputationSection";
+import SettingsSection from "@/dashboard/freelancer/sections/SettingsSection";
 
 export default function FreelancerDashboard() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -25,6 +26,8 @@ export default function FreelancerDashboard() {
         return <WalletSection />;
       case "reputation":
         return <ReputationSection />;
+      case "settings":
+        return <SettingsSection />
       default:
         return <ProfileSection />;
     }

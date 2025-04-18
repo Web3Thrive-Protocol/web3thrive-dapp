@@ -1,56 +1,103 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.28;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-/** @notice Profile Management Contract
-@dev Stores basic profile metadata and off-chain IPFS URIs
-*/
+contract ProfileManager {
+    // Enum for user roles
+    enum RoleType { Freelancer, Recruiter }
 
-contract ProfileManager{
+    // Struct to store minimal user profile data
     struct Profile {
-        string name;
-        string role;
-        string metadataURI; // IPFS Link
-        bool exists;
+        string name;          // User's name
+        RoleType roleType;   // Freelancer or Recruiter
+        uint hourlyRate;     // Optional: Hourly rate for freelancers
+        bool exists;         // Flag to check if the profile exists
     }
 
-
-    // stores user address mapped to their profile
+    // Mapping to store profiles
     mapping(address => Profile) public profiles;
 
-    // events
-    event ProfileRegistered(address indexed user, string name, string role, string uri);
-    event ProfileUpdated(address indexed user, string uri);
+    // Events for tracking actions
+    event ProfileCreated(address indexed user);
+    event ProfileUpdated(address indexed user);
+    event ProfileDeleted(address indexed user);
 
-    // errors
-    error UserAlreadyExist();
-    error ProfileDoesNotExist();
+    // Custom error for unregistered users
+    error NotRegistered();
 
-    // modifiers
-    modifier onlyNewUser(){
-        if(profiles[msg.sender].exists){
-            revert UserAlreadyExist();
-        }
+    // Modifier to ensure only registered users can call certain functions
+    modifier onlyRegistered() {
+        if (!profiles[msg.sender].exists) revert NotRegistered();
         _;
     }
 
-    modifier existingUsersOnly(){
-        if(!profiles[msg.sender].exists){
-            revert ProfileDoesNotExist();
-        }
+    /**
+     * @notice Creates a new user profile with minimal data
+     */
+    function createProfile(
+        string calldata _name,
+        RoleType _roleType,
+        uint _hourlyRate // Optional: Set to 0 if not applicable
+    ) external {
+        require(!profiles[msg.sender].exists, "Profile already exists");
 
-        _;
+        profiles[msg.sender] = Profile({
+            name: _name,
+            roleType: _roleType,
+            hourlyRate: _hourlyRate,
+            exists: true
+        });
+
+        emit ProfileCreated(msg.sender);
     }
 
+    /**
+     * @notice Updates an existing user profile with minimal data
+     */
+    function updateProfile(
+        string calldata _name,
+        RoleType _roleType,
+        uint _hourlyRate // Optional: Set to 0 if not applicable
+    ) external onlyRegistered {
+        Profile storage p = profiles[msg.sender];
+        p.name = _name;
+        p.roleType = _roleType;
+        p.hourlyRate = _hourlyRate;
 
-    // functions
-    function registerProfile(string memory _name, string memory _role, string memory _uri)  external onlyNewUser{
-        profiles[msg.sender] = Profile(_name, _role, _uri, true);
-        emit ProfileRegistered(msg.sender, _name, _role, _uri);
+        emit ProfileUpdated(msg.sender);
     }
 
-    function updateProfileURI(string memory _uri) external existingUsersOnly{
-        profiles[msg.sender].metadataURI = _uri;
-        emit ProfileUpdated(msg.sender, _uri);
+    /**
+     * @notice Deletes a user profile
+     */
+    function deleteProfile() external onlyRegistered {
+        profiles[msg.sender].exists = false; // Mark profile as deleted
+        emit ProfileDeleted(msg.sender);
     }
 
+    /**
+     * @notice Retrieves the profile of a given user
+     */
+    function getProfile(address _user) external view returns (
+        string memory name,
+        string memory role,
+        uint hourlyRate,
+        bool exists
+    ) {
+        Profile memory p = profiles[_user];
+        require(p.exists, "Profile does not exist");
+
+        // Convert RoleType to string
+        string memory roleStr = roleTypeToString(p.roleType);
+
+        return (p.name, roleStr, p.hourlyRate, p.exists);
+    }
+
+    /**
+     * @notice Converts RoleType enum to a human-readable string
+     */
+    function roleTypeToString(RoleType _role) public pure returns (string memory) {
+        if (_role == RoleType.Freelancer) return "freelancer";
+        if (_role == RoleType.Recruiter) return "recruiter";
+        revert("Invalid role");
+    }
 }
