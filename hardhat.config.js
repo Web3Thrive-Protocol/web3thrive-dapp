@@ -14,7 +14,7 @@ module.exports = {
     localhost: {
       url: "http://127.0.0.1:8545", // local hardhat network
     },
-    apechain : {
+    curtis : {
       url: `https://apechain-curtis.g.alchemy.com/v2/${providerKey}`,
       accounts: [deployerPrivateKey]
     }
