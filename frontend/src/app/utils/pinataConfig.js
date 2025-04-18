@@ -1,0 +1,22 @@
+
+/*
+Pinata IPS API info
+API Key: 175e65b38b3c775807fa
+API Secret: 1e971d309fcc99881d36bb1b64fab750ec6d96506af3588800ddd8d0a1958542
+JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI2MWMwYTYwMS0zYzQ3LTQ1MmUtYmNjOC1hZWRhYTcxZTA0M2IiLCJlbWFpbCI6ImVtbWFudWVsbGV0c3UxOEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiMTc1ZTY1YjM4YjNjNzc1ODA3ZmEiLCJzY29wZWRLZXlTZWNyZXQiOiIxZTk3MWQzMDlmY2M5OTg4MWQzNmJiMWI2NGZhYjc1MGVjNmQ5NjUwNmFmMzU4ODgwMGRkZDhkMGExOTU4NTQyIiwiZXhwIjoxNzc2NDE0OTEyfQ.Uco2svTPF5lKaZ2XbP0Lm-pcuZ5wPhO5nICjfPPCfMw
+
+_______
+
+Pinata Gateway:
+JWT(Access Control Token): oq4nc7mOz2KEvDU09xMTbWyggP8rHD60splCtnPz-9vQrF2Mdd7qL4v1mtjCdmrR
+*/
+"server only"
+
+import { PinataSDK } from "pinata";
+
+export const pinata = new PinataSDK({
+    pinataJwt: `${process.env.PINATA_JWT}`,
+    pinataGateway: `${process.env.NEXT_PUBLIC_GATEWAY_URL}`
+})
+
+

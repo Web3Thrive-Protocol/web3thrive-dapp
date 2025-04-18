@@ -1,22 +1,19 @@
-// import modules
-
 "use client";
 
 import { WagmiProvider, cookieToInitialState } from "wagmi";
 import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config } from "@/lib/config";
+import { getWagmiConfig } from "@/lib/config";
 
-// Set up a React Query client.
 const queryClient = new QueryClient();
 
-export default function Providers({ children, cookie }) {
-  // initial state
-  const initialState = cookieToInitialState(config, cookie);
+export default function Providers({ children}) {
+  const config = getWagmiConfig(); // 🧠 Memoized config
 
-  // Wrap app with Wagmi, RainbowKit and React Query context.
+  /*const initialState = cookieToInitialState(config, cookie);*/
+
   return (
-    <WagmiProvider config={config} initialState={initialState}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={lightTheme({
@@ -25,8 +22,10 @@ export default function Providers({ children, cookie }) {
             borderRadius: "large",
             fontStack: "poppins",
             overlayBlur: "small",
-          })} modalSize="compact">
-            {children}
+          })}
+          modalSize="compact"
+        >
+          {children}
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

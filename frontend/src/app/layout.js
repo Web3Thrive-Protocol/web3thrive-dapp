@@ -1,24 +1,24 @@
 // import modules
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import LayoutWrapper from "./LayoutWrapper";
+import "@rainbow-me/rainbowkit/styles.css";
 import Providers from "@/context/Providers";
-import '@rainbow-me/rainbowkit/styles.css';
-
+import {headers} from "next/headers";
 
 export const metadata = {
   title: "web3thrive",
   description: "Your gateway to future freelancing",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const cookie = (await headers()).get("cookie");
   return (
     <html lang="en">
       <body>
-        <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+        <Providers cookie={cookie}>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
         </Providers>
       </body>
     </html>

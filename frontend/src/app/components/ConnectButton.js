@@ -20,7 +20,6 @@ export const ConnectButton = ({ setIsLoggedIn }) => {
   }, []);
 
   useEffect(() => {
-    // ✅ Corrected logic
     if (isConnected) {
       setIsLoggedIn(true);
     } else {

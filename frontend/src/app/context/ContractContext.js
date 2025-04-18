@@ -1,39 +1,29 @@
-'use client'
-import { useState, useEffect, useContext, createContext } from "react";
-import { contractAddress, contractABI } from "./constants";
-import { ethers } from "ethers";
-import { useWallet } from "./WalletContext";
+"use client";
 
-export const ContractContext = createContext();
+import React, { createContext, useContext } from "react";
+import { useContract } from "wagmi";
+import { CONTRACTS } from "@/context/constants"
 
-export const ContractProvider = ({children}) => {
-    const { walletAddress } = useWallet();
-    const [contract, setContract] = useState(null);
+const ContractContext = createContext();
 
-    useEffect(() => {
-        const loadContract = async () => {
-            try {
-                if (window.ethereum && walletAddress) {
-                    const provider = new ethers.BrowserProvider(window.ethereum); // ✅ FIXED HERE
-                    const signer = await provider.getSigner();
-                    const instance = new ethers.Contract(contractAddress, contractABI, signer);
-                    setContract(instance);
-                } else {
-                    console.log("Please connect your wallet!");
-                }
-            } catch (error) {
-                console.log("An error occurred while creating contract:", error);
-            }
-        };
+export const ContractProvider = ({ children }) => {
+  const escrowContract = useContract(CONTRACTS.ESCROW);
+  const profileContract = useContract(CONTRACTS.PROFILE_MANAGER);
+  const learningContract = useContract(CONTRACTS.LEARNING_MODULE);
+  const reputationContract = useContract(CONTRACTS.REPUTATION);
 
-        loadContract(); // ✅ Don't forget to call it
-    }, [walletAddress]);
-
-    return (
-        <ContractContext.Provider value={{ contract }}>
-            {children}
-        </ContractContext.Provider>
-    );
+  return (
+    <ContractContext.Provider
+      value={{
+        escrowContract,
+        profileContract,
+        learningContract,
+        reputationContract,
+      }}
+    >
+      {children}
+    </ContractContext.Provider>
+  );
 };
 
-export const useContract = () => useContext(ContractContext);
+export const useContracts = () => useContext(ContractContext);

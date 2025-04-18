@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-// import { ConnectButton } from "@/components/ConnectButton";
+// import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectButton } from "@/components/ConnectButton";
 import { useState } from "react";
 
 const Navbar = () => {
@@ -32,7 +32,7 @@ const Navbar = () => {
       </ul>
 
       <div>
-        <ConnectButton />
+        <ConnectButton setIsLoggedIn={setIsLoggedIn}/>
       </div>
     </nav>
   );
