@@ -8,6 +8,13 @@ pragma solidity ^0.8.28;
  */
 
 contract Escrow{
+
+    address public owner;
+
+    constructor(){
+        owner = msg.sender;
+    }
+
     enum Status { Pending, Completed, Disputed, Released }
 
     struct Job {

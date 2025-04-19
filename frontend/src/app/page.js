@@ -12,6 +12,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+
 
 export default function Home() {
   const el = useRef(null);
@@ -36,13 +38,25 @@ export default function Home() {
       id: 1,
       title: "Get a wallet",
       description:
-        "Connect a wallet you already, or login to with email to get one",
+        "Connect a wallet and create a profile.",
     },
     {
       id: 2,
-      title: "Get a wallet",
+      title: "Explore learning paths",
       description:
-        "Connect a wallet you already, or login to with email to get one",
+        "Browse learning paths for African web3.",
+    },
+    {
+      id: 3,
+      title: "Learn to earn",
+      description:
+        "Learn and receive rewards upon completion.",
+    },
+    {
+      id: 4,
+      title: "Unlock freelance opportunities",
+      description:
+        "Gain access to freelance opportunities that align with your expertise.",
     },
   ];
 
@@ -116,11 +130,13 @@ export default function Home() {
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-6xl w-full">
           {/* Card 1 */}
           <div className="bg-gray-50 p-6 rounded-2xl shadow hover:shadow-lg transition duration-300">
-            <img
-              src="/nft-placeholder-1.png"
-              alt="NFT Badge"
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+          <Image
+                src="/solidity.png" 
+                alt="Solidity Badge"
+                width={100}
+                height={100}
+                className="object-cover rounded-xl mb-30"
+              />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               Solidity Basics
             </h3>
@@ -131,11 +147,13 @@ export default function Home() {
 
           {/* Card 2 */}
           <div className="bg-gray-50 p-6 rounded-2xl shadow hover:shadow-lg transition duration-300">
-            <img
-              src="/nft-placeholder-2.png"
-              alt="NFT Badge"
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+          <Image
+                src="/ux.png" 
+                alt="UX Badge"
+                width={100}
+                height={100}
+                className="object-cover rounded-xl mb-30"
+              />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               Crypto UX Design
             </h3>
@@ -146,11 +164,13 @@ export default function Home() {
 
           {/* Card 3 */}
           <div className="bg-gray-50 p-6 rounded-2xl shadow hover:shadow-lg transition duration-300">
-            <img
-              src="/nft-placeholder-3.png"
-              alt="NFT Badge"
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+          <Image
+                src="/defi.png" 
+                alt="Defi Badge"
+                width={100}
+                height={100}
+                className="object-cover rounded-xl mb-30"
+              />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               DeFi Mastery
             </h3>

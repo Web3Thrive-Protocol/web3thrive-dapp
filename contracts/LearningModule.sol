@@ -7,6 +7,7 @@ pragma solidity ^0.8.28;
  * @dev Tracks course enrollments and completions
  */
 contract LearningModule {
+    
     struct Course {
         string title;
         string uri;

@@ -43,7 +43,7 @@ const Footer = () => {
       Links: [
         {path:"/path", name:"Careers"}, 
         {path:"/terms",name:"Terms of Service"}, 
-        {path:"/privacy", name: "Privacy Policy"}
+        {path:"/policy", name: "Privacy Policy"}
       ],
     }
   ]

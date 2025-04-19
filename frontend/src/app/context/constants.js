@@ -320,6 +320,7 @@ const LearningModuleABI = {
   "deployedLinkReferences": {}
 }
 
+
 const ProfileManagerABI = {
   "_format": "hh-sol-artifact-1",
   "contractName": "ProfileManager",
