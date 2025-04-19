@@ -26,8 +26,8 @@ const Navbar = () => {
         <Link href="/dashboard" className="hover:text-blue-500">
           Dashboard
         </Link>
-        <Link href="/faq" className="hover:text-blue-500">
-          FAQ
+        <Link href="/ai" className="hover:text-blue-500">
+          AI
         </Link>
       </ul>
 
