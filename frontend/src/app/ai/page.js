@@ -1,14 +1,14 @@
-// src/app/ai/page.js
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 import { Send, User, Bot } from 'lucide-react';
+import axios from 'axios';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I’m your Web3Thrive AI assistant. How can I help you today?',
+      content: 'Hello! I am your Web3Thrive AI assistant. How can I help you today?',
     },
   ]);
   const [input, setInput] = useState('');
@@ -20,25 +20,93 @@ export default function ChatPage() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Function to clean markdown formatting from responses
+  const cleanMarkdownFormatting = (text) => {
+    if (!text) return '';
+    
+    // Remove bold formatting
+    text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    
+    // Remove headers (###, ##, #)
+    text = text.replace(/#{1,6}\s+(.+)/g, '$1');
+    
+    // Remove horizontal rules (---, ___, ***)
+    text = text.replace(/^(---|\*\*\*|___)$/gm, '');
+    
+    // Remove bullet points
+    text = text.replace(/^\s*[\-\*]\s+/gm, '');
+    
+    // Remove numbered lists (1., 2., etc)
+    text = text.replace(/^\s*\d+\.\s+/gm, '');
+    
+    // Clean up extra line breaks
+    text = text.replace(/\n{3,}/g, '\n\n');
+    
+    return text.trim();
+  };
+
+  const callOpenRouterAPI = async (userMessage) => {
+    try {
+      const response = await axios({
+        method: 'post',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        headers: {
+          'Authorization': 'Bearer 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', // Add your API key here
+          'HTTP-Referer': 'https://web3thrive.com', // Update with your site URL
+          'X-Title': 'Web3Thrive', // Update with your site name
+          'Content-Type': 'application/json'
+        },
+        data: {
+          model: 'deepseek/deepseek-r1:free',
+          messages: [
+            // Include conversation history for context
+            ...messages.map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            // Add the current user message
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ]
+        }
+      });
+
+      // Extract the AI's response content and clean markdown formatting
+      const aiResponse = response.data.choices[0].message.content;
+      const cleanedResponse = cleanMarkdownFormatting(aiResponse);
+      return cleanedResponse;
+    } catch (error) {
+      console.error('Error calling OpenRouter API:', error.message);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
+      throw error; // Re-throw for the handleSend function to catch
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
+    
+    // Add user message to chat
     setMessages((prev) => [...prev, { role: 'user', content: input }]);
+    const userMessage = input;
     setInput('');
     setLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input, model: 'deepseek' }),
-      });
-      const { reply } = await res.json();
+      // Call OpenRouter API directly instead of using fetch to /api/chat
+      const reply = await callOpenRouterAPI(userMessage);
+      
+      // Add AI response to chat
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
       console.error(err);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Oops—something went wrong.' },
+        { role: 'assistant', content: 'Oops—something went wrong. Please try again later.' },
       ]);
     } finally {
       setLoading(false);
@@ -91,7 +159,11 @@ export default function ChatPage() {
                         : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                     }`}
                   >
-                    {msg.content}
+                    {msg.content.split('\n').map((paragraph, idx) => (
+                      <p key={idx} className={idx > 0 ? 'mt-2' : ''}>
+                        {paragraph}
+                      </p>
+                    ))}
                   </div>
                 </div>
               </div>
